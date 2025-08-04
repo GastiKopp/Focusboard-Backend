@@ -84,5 +84,5 @@ npm start          # ejecuta dist/index.js
 
 ### ✍️ Autor
 
-Gastón Kopplin Alva
+Gastón Kopplin Alva - 
 github.com/GastiKopp
