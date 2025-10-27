@@ -1,30 +1,35 @@
-import pool from "../config/db";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import User from "../models/User";
 
 export const registerUser = async (email: string, password: string, fullName: string) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const result = await pool.query(
-    "INSERT INTO users (full_name, email, password) VALUES ($1, $2, $3) RETURNING id, email, full_name, created_at",
-    [fullName, email, hashedPassword]
-  );
+  const user = await User.create({
+    full_name: fullName,
+    email,
+    password: hashedPassword,
+  });
 
-  return result.rows[0];
+  return {
+    id: user.id,
+    email: user.email,
+    full_name: user.full_name,
+    created_at: user.createdAt,
+  };
 };
 
-
 export const loginUser = async (email: string, password: string) => {
-  const result = await pool.query(
-    "SELECT id, email, full_name, password FROM users WHERE email = $1",
-    [email]
-  );
+  const user = await User.findOne({ where: { email } });
 
-  const user = result.rows[0];
-  if (!user) throw new Error("El usuario no existe");
+  if (!user) {
+    throw new Error("El usuario no existe");
+  }
 
   const passwordMatch = await bcrypt.compare(password, user.password);
-  if (!passwordMatch) throw new Error("Contraseña incorrecta");
+  if (!passwordMatch) {
+    throw new Error("Contraseña incorrecta");
+  }
 
   const token = jwt.sign(
     { id: user.id, email: user.email },
@@ -36,7 +41,7 @@ export const loginUser = async (email: string, password: string) => {
     user: {
       id: user.id,
       email: user.email,
-      full_name: user.full_name
+      full_name: user.full_name,
     },
     token,
   };

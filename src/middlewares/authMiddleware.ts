@@ -1,18 +1,26 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ error: "Token no proporcionado" });
+    res.status(401).json({ error: "Token no proporcionado" });
+    return;
   }
 
-  jwt.verify(token, process.env.JWT_SECRET as string, (err, user) => {
-    if (err) return res.status(403).json({ error: "Token inválido" });
+  jwt.verify(token, process.env.JWT_SECRET as string, (err: any, user: any) => {
+    if (err) {
+      res.status(403).json({ error: "Token inválido" });
+      return;
+    }
 
-    (req as any).user = user; 
+    req.user = user;
     next();
   });
 };
